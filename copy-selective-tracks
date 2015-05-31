@@ -1,0 +1,35 @@
+#!/bin/bash
+
+zenity --info --text="Bitte die zu kopierende CD einlegen!"
+
+titles=$(zenity --entry --text="Bitte die gewünschten Titelnummern mit Komma getrennt eingeben:")
+
+if [[ $? -ne 0 ]]; then
+	exit 1
+fi
+
+tempdir=$(mktemp -d --tmpdir CDTC.XXXXXXXX)
+
+if [[ $? -ne 0 ]]; then
+	zenity --error --text="Fehler beim Erstellen des temporären Verzeichnisses"
+	exit 1
+fi
+
+cd "$tempdir"
+cdparanoia -B "$titles"
+
+if [[ $? -ne 0 ]]; then
+	zenity --error --text="Die Titel konnten nicht extrahiert werden!"
+	exit 1
+fi
+
+zenity --info --text="Bitte jetzt die brennbare CD einlegen, das Laufwerk schließen und dann auf OK klicken!"
+
+wodim -eject -audio *.wav
+
+if [[ $? -ne 0 ]]; then
+	zenity --error --text="Die CD konnte nicht gebrannt werden!"
+	exit 1
+else
+	zenity --info --text="Die CD wurde erfolgreich gebrannt!"
+fi
